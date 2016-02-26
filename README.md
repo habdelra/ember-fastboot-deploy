@@ -16,7 +16,7 @@ This middleware is used to receive deployment notifications from the ember-cli-d
  
 This middleware is responsible for recieving the notification from the last step above, downloading the zip file from S3, unzipping it on the FastBoot server's filesystem, and then restarting the internally managed Ember application that runs within FastBoot.
 
-As the clients issue requests to the FastBoot, this middleware is responsible for returning the middleware function for the most recently deployed Ember application. Additionally, clients can include a `&nofastboot` query parameter to passthru the fastboot middleware to the middleware that appears after this middleware for scenarios when you don't want to serve FastBoot HTML.
+As the clients issue requests to the FastBoot, this middleware is responsible for returning the middleware function for the most recently deployed Ember application. Additionally, clients can include a `&noFastboot` query parameter to passthru the fastboot middleware to the middleware that appears after this middleware for scenarios when you don't want to serve FastBoot HTML.
 
 The deployment request that is issued to this middleware must be issued using HTTPS, and is of the form:
 ```
@@ -46,7 +46,7 @@ app.get('/deploy', fastbootDeploy.deployMiddleware());
 app.get('/*', fastbootDeploy.fastbootServerMiddleware());
 
 // A hypothetical example of how you would setup middleware for serving the index.html from another source
-// like Redis. Use `&nofastboot` query param to passthrough to the serveIndexHtmlFromRedis middleware
+// like Redis. Use `&noFastboot` query param to passthrough to the serveIndexHtmlFromRedis middleware
 //
 // app.get('/*', fastbootDeploy.fastbootServerMiddleware(), serveIndexHtmlFromRedis);
 
