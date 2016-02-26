@@ -11,14 +11,15 @@ var debug = require('debug')('ember-fastboot-deploy');
 var FastBootServer = require('ember-fastboot-server');
 
 function FastBootDeploy(options) {
+  var distPath = options.distPath || 'tmp/current-fastboot-dist';
   this.deploySecret = options.deploySecret;
   this.s3BucketUrl = options.s3BucketUrl;
-  this.distPath = options.distPath;
+  this.distPath = distPath;
 
-  if (fs.existsSync(path.join(options.distPath, 'package.json'))) {
-    this.fastbootServer = new FastBootServer({ distPath: options.distPath });
-  } else if (!fs.existsSync(options.distPath)) {
-    mkdirp.sync(options.distPath);
+  if (fs.existsSync(path.join(distPath, 'package.json'))) {
+    this.fastbootServer = new FastBootServer({ distPath: distPath });
+  } else if (!fs.existsSync(distPath)) {
+    mkdirp.sync(distPath);
   }
 }
 
