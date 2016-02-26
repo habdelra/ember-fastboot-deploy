@@ -83,9 +83,6 @@ var VALID_DEPLOY_TARGETS = [ //update these to match what you call your deployme
 ];
 
 module.exports = function(deployTarget) {
-  // ignoring self signed certs for dev--REMOVE THIS!!
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
   var timestamp = (new Date()).getTime();
   var fastbootDeploySecret = process.env.FASTBOOT_DEPLOY_SECRET;
   var fastbootArchiveName = 'fastboot-build-' + timestamp + '.tar.gz';
@@ -144,6 +141,12 @@ module.exports = function(deployTarget) {
 
   return ENV;
 }
+```  
+
+(for your development environment it might be useful to use a self-signed cert, in that case you can add this you your deploy.js)
+```js
+  //ignoring self signed certs for dev--REMOVE THIS!!
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 ```
 
 
