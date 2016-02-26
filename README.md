@@ -1,6 +1,12 @@
 # ember-fastboot-deploy
 Node Express middleware to deploy Ember applications into a FastBoot server
 
+To install this middleware run the following from your FastBoot node server: 
+
+```
+npm install ember-fastboot-deploy --save
+```
+
 This middleware is used to receive deployment notifications from the ember-cli-deploy pipeline. The idea is that in your Ember app, you can setup an ember-cli-deploy pipeline that:
 
 1. Performs a FastBoot build `ember-cli-fastboot-build`
