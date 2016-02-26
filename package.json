@@ -1,0 +1,37 @@
+{
+  "name": "ember-fastboot-deploy",
+  "version": "0.1.0",
+  "description": "Node Express middleware to deploy Ember applications into a FastBoot server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/habdelra/ember-fastboot-deploy.git"
+  },
+  "keywords": [
+    "ember",
+    "fastboot",
+    "deploy",
+    "express",
+    "middleware"
+  ],
+  "author": "Hassan Abdel-Rahman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/habdelra/ember-fastboot-deploy/issues"
+  },
+  "homepage": "https://github.com/habdelra/ember-fastboot-deploy#readme",
+  "dependencies": {
+    "bluebird": "^3.3.1",
+    "chalk": "^1.1.1",
+    "ember-fastboot-server": "^0.5.0",
+    "express-force-ssl": "^0.3.0",
+    "mkdirp": "^0.5.1",
+    "ncp": "^2.0.0",
+    "request": "^2.69.0",
+    "rimraf": "^2.5.2",
+    "tar.gz": "^1.0.3"
+  }
+}
