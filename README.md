@@ -12,6 +12,12 @@ This middleware is responsible for recieving the notification from the last step
 
 As the clients issue requests to the FastBoot, this middleware is responsible for returning the middleware function for the most recently deployed Ember application. Additionally, clients can include a `&nofastboot` query parameter to passthru the fastboot middleware to the middleware that appears after this middleware for scenarios when you don't want to serve FastBoot HTML.
 
+The deployment request that is issued to this middleware must be issued using HTTPS, and is of the form:
+```
+https://youserver.com/deploy?secret=YUr_Sup3R_s3crEts&pkgName=fastboot-build-1456527258931.tar.gz
+```
+where `secret` is your deployment secret, and `pkgName` is the name of the FastBoot build zip file living on s3 that you wish to deploy.
+
 ## FastBoot Server Setup
 
 Here is an example FastBoot server that uses the FastBoot Deploy middleware:
@@ -24,8 +30,7 @@ var FastBootDeploy = require('ember-fastboot-deploy');
 
 var fastbootDeploy = new FastBootDeploy({
   deploySecret: process.env.FASTBOOT_DEPLOY_SECRET,
-  s3BucketUrl: process.env.FASTBOOT_PKG_S3_BUCKET_URL,
-  distPath: 'tmp/current-fastboot-dist'
+  s3BucketUrl: process.env.FASTBOOT_PKG_S3_BUCKET_URL
 });
 
 var app = express();
@@ -57,7 +62,6 @@ In order to use this middleware you will need to provide the following parameter
 
 1. `deploySecret` This is a secret value that the deployment notification request that is issued from the `ember-cli-deploy-notifications` pipeline build step must include. It is recommended you set this as an enviroment variable as it is a sentitive value.
 2. `s3BucketUrl` This is the URL from which you can access assets of the s3 bucket that contains your FastBoot build zip file. e.g. `https://s3.amazonaws.com/my-s3-bucket`
-3. `distPath` This is a folder that will hold the currently deployed Ember application's asset files. If this folder does not exist, it will be created automaticlaly for you.
 
 ## Ember Application Deployment Configuration 
 
@@ -148,5 +152,7 @@ module.exports = function(deployTarget) {
   //ignoring self signed certs for dev--REMOVE THIS!!
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 ```
+
+
 
 
