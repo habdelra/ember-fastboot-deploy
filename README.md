@@ -12,6 +12,8 @@ This middleware is responsible for recieving the notification from the last step
 
 As the clients issue requests to the FastBoot, this middleware is responsible for returning the middleware function for the most recently deployed Ember application. Additionally, clients can include a `&nofastboot` query parameter to passthru the fastboot middleware to the middleware that appears after this middleware for scenarios when you don't want to serve FastBoot HTML.
 
+## FastBoot Server Setup
+
 Here is an example FastBoot server that uses the FastBoot Deploy middleware:
 
 ```js
@@ -51,8 +53,97 @@ var listener = https.createServer(options, app).listen(process.env.PORT || 3000,
 ```
 (Note that this FastBoot Deploy middleware requires that the `/deploy` route run in HTTPS for security reasons--other routes do not have to run in HTTPS if you don't want them to).
 
-## FastBoot Server Setup
+In order to use this middleware you will need to provide the following parameters to the FastBootDeploy function: 
 
-Using this middleware is pretty straight 
+1. `deploySecret` This is a secret value that the deployment notification request that is issued from the `ember-cli-deploy-notifications` pipeline build step must include. It is recommended you set this as an enviroment variable as it is a sentitive value.
+2. `s3BucketUrl` This is the URL from which you can access assets of the s3 bucket that contains your FastBoot build zip file. e.g. `https://s3.amazonaws.com/my-s3-bucket`
+3. `distPath` This is a folder that will hold the currently deployed Ember application's asset files. If this folder does not exist, it will be created automaticlaly for you.
 
 ## Ember Application Deployment Configuration 
+
+In order to leverage this middleware for deploying your Ember application to the FastBoot server, you need to setup your Ember application to perform all the deployment steps outlined at the top of this README. The following ember-cli-deploy addons should be installed for a setup where you want to host your application assets in S3 and use FastBoot to serve your index.html:
+
+* `ember-cli-deploy`
+* `ember-cli-deploy-archive` (At the time of this writing you'll need to use this PR specficially: https://github.com/elidupuis/ember-cli-deploy-archive/pull/2)
+* `ember-cli-deploy-display-revisions`
+* `ember-cli-deploy-fastboot-build`
+* `ember-cli-deploy-gzip`
+* `ember-cli-deploy-manifest`
+* `ember-cli-deploy-notifications`
+* `ember-cli-deploy-revision-data`
+* `ember-cli-deploy-s3`
+
+You can then setup your Ember application's `config/deploy.js` like this:
+
+```js
+var VALID_DEPLOY_TARGETS = [ //update these to match what you call your deployment targets
+  'dev',
+  'staging',
+  'prod'
+];
+
+module.exports = function(deployTarget) {
+  // ignoring self signed certs for dev--REMOVE THIS!!
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+  var timestamp = (new Date()).getTime();
+  var fastbootDeploySecret = process.env.FASTBOOT_DEPLOY_SECRET;
+  var fastbootArchiveName = 'fastboot-build-' + timestamp + '.tar.gz';
+  var filePattern = "**/*.{js,css,png,gif,ico,jpg,map,xml,txt,svg,swf,eot,ttf,woff,woff2,gz,json}";
+  var ENV = {
+    'fastboot-build': {},
+    s3: {
+      filePattern: filePattern
+    },
+    archive: {
+      addToDistFiles: true,
+      archiveName: function() {
+        return fastbootArchiveName;
+      }
+    },
+    gzip: {
+      ignorePattern:'**/assetMap.json'
+    },
+    manifest: {
+      filePattern: filePattern
+    },
+    notifications: {
+      services: {
+        fastbootServer: {
+          url: 'https://my-app.com/deploy?secret=' +
+               fastbootDeploySecret + '&pkgName=' + fastbootArchiveName,
+          method: 'GET',
+          headers: {},
+          body: {},
+          didActivate: true
+        }
+      }
+    }
+  };
+  if (VALID_DEPLOY_TARGETS.indexOf(deployTarget) === -1) {
+    throw new Error('Invalid deployTarget ' + deployTarget);
+  }
+
+  if (deployTarget === 'dev') {
+    ENV['fastboot-build'].environment = 'development';
+  }
+
+  if (deployTarget === 'staging' || deployTarget === 'prod') {
+    ENV['fastboot-build'].environment = deployTarget;
+    ENV.s3.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    ENV.s3.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+  }
+
+  if (deployTarget === 'staging') {
+    ENV.s3.bucket = 'my-app-assets';
+    ENV.s3.region = 'us-east-1';
+  }
+  if (deployTarget === 'prod') {
+    //TODO
+  }
+
+  return ENV;
+}
+```
+
+
