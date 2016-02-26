@@ -37,7 +37,9 @@ function requestGetFile(url, filePath) {
 
 FastBootDeploy.prototype.fastbootServerMiddleware = function() {
   return function(req, res, next) {
-    if (this.fastbootServer) {
+    if (req.query.noFastboot) {
+      next();
+    } else if (this.fastbootServer) {
       return this.fastbootServer.middleware()(req, res, next);
     } else {
       return res.send(
