@@ -14,7 +14,7 @@ This middleware is used to receive deployment notifications from the ember-cli-d
 3. Uploads the FastBoot zip to S3 `ember-cli-deploy-s3`
 4. Sends a notitication to the FastBoot server that a new zip is available to be deployed `ember-cli-deploy-notifications`
 
-Here's a video of the middleware in action: (https://www.youtube.com/watch?v=xAlpXjNYsDs)[https://www.youtube.com/watch?v=xAlpXjNYsDs]
+Here's a video of the middleware in action: [https://www.youtube.com/watch?v=xAlpXjNYsDs](https://www.youtube.com/watch?v=xAlpXjNYsDs)
  
 This middleware is responsible for recieving the notification from the last step above, downloading the zip file from S3, unzipping it on the FastBoot server's filesystem, and then restarting the internally managed Ember application that runs within FastBoot.
 
