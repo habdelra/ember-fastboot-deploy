@@ -87,7 +87,7 @@ FastBootDeploy.prototype.deployMiddleware = function() {
     }).then(function() {
       self.log('green', 'Creating new fastboot middleware from dist folder: ' + self.distPath);
       self.fastbootServer = new FastBootServer({ distPath: self.distPath });
-      return res.status(204).end();
+      return res.status(200).send('Deployed package ' + pkgName + ' successfullfy.').end();
     }).catch(function(error) {
       self.log('red', error.stack);
       next(error);
