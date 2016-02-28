@@ -76,7 +76,7 @@ In order to use this middleware you will need to provide the following parameter
 In order to leverage this middleware for deploying your Ember application to the FastBoot server, you need to setup your Ember application to perform all the deployment steps outlined at the top of this README. The following ember-cli-deploy addons should be installed for a setup where you want to host your application assets in S3 and use FastBoot to serve your index.html:
 
 * `ember-cli-deploy`
-* `ember-cli-deploy-archive` (At the time of this writing you'll need to use this PR specficially: https://github.com/elidupuis/ember-cli-deploy-archive/pull/2)
+* `ember-cli-deploy-archive` 
 * `ember-cli-deploy-display-revisions`
 * `ember-cli-deploy-fastboot-build`
 * `ember-cli-deploy-gzip`
@@ -98,28 +98,31 @@ module.exports = function(deployTarget) {
   var timestamp = (new Date()).getTime();
   var fastbootDeploySecret = process.env.FASTBOOT_DEPLOY_SECRET;
   var fastbootArchiveName = 'fastboot-build-' + timestamp + '.tar.gz';
-  var filePattern = "**/*.{js,css,png,gif,ico,jpg,map,xml,txt,svg,swf,eot,ttf,woff,woff2,gz,json}";
+  var appManifest = 'manifest.txt';
+  var fastbootManifest = 'manifest-archive.txt';
   var ENV = {
+    plugins: ['fastboot-build', 'archive', 'gzip', 'manifest:manifest-main',
+      'manifest:manifest-archive', 's3:s3-main', 's3:s3-archive', 'notifications'],
     'fastboot-build': {},
-    s3: {
-      filePattern: filePattern
+    's3-main': { manifestPath: appManifest }, //manifest-archive clobbers this, need to specify it manually
+    's3-archive': {
+      manifestPath: fastbootManifest,
+      filePattern: '**/*.gz',
+      distDir: function(context) { return context.archiveDir; },
+      distFiles: function(context) { return [ context.archiveName ]; }
     },
-    archive: {
-      addToDistFiles: true,
-      archiveName: function() {
-        return fastbootArchiveName;
-      }
-    },
-    gzip: {
-      ignorePattern:'**/assetMap.json'
-    },
-    manifest: {
-      filePattern: filePattern
+    archive: { archiveName: function() { return fastbootArchiveName; } },
+    'manifest-main': { manifestPath: appManifest },
+    'manifest-archive': {
+      manifestPath: fastbootManifest,
+      filePattern: '**/*.gz',
+      distFiles: function(context) { return [ context.archiveName ]; },
+      distDir: function(context) { return context.archiveDir; }
     },
     notifications: {
       services: {
         fastbootServer: {
-          url: 'https://my-app.com/deploy?secret=' +
+          url: 'https://my-fastboot-server.com/deploy?secret=' +
                fastbootDeploySecret + '&pkgName=' + fastbootArchiveName,
           method: 'GET',
           headers: {},
@@ -134,18 +137,23 @@ module.exports = function(deployTarget) {
   }
 
   if (deployTarget === 'dev') {
+    ENV.plugins = ['fastboot-build'];
     ENV['fastboot-build'].environment = 'development';
   }
 
   if (deployTarget === 'staging' || deployTarget === 'prod') {
     ENV['fastboot-build'].environment = deployTarget;
-    ENV.s3.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-    ENV.s3.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+    ENV['s3-main'].accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    ENV['s3-main'].secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+    ENV['s3-archive'].accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    ENV['s3-archive'].secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
   }
 
   if (deployTarget === 'staging') {
-    ENV.s3.bucket = 'my-app-assets';
-    ENV.s3.region = 'us-east-1';
+    ENV['s3-main'].bucket = 'my-apps-assets';
+    ENV['s3-main'].region = 'us-east-1';
+    ENV['s3-archive'].bucket = 'my-apps-assets';
+    ENV['s3-archive'].region = 'us-east-1';
   }
   if (deployTarget === 'prod') {
     //TODO
