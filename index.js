@@ -56,7 +56,7 @@ FastBootDeploy.prototype.fastbootServerMiddleware = function() {
 
 FastBootDeploy.prototype.deployMiddleware = function() {
   return [require('express-force-ssl'), function(req, res, next) {
-    if (req.query.secret !== this.deploySecret) { return res.status(403).end(); }
+    if (req.query.secret !== this.deploySecret) { return res.status(403).send('Deploy secret is is invalid').end(); }
 
     var self = this;
     var pkgName = req.query.pkgName;

@@ -16,7 +16,7 @@ This middleware is used to receive deployment notifications from the ember-cli-d
 
 Here's a video of the middleware in action: [https://vimeo.com/156916068](https://vimeo.com/156916068)
  
-This middleware is responsible for recieving the notification from the last step above, downloading the zip file from S3, unzipping it on the FastBoot server's filesystem, and then restarting the internally managed Ember application that runs within FastBoot.
+This middleware is responsible for receiving the notification from the last step above, downloading the zip file from S3, unzipping it on the FastBoot server's filesystem, and then restarting the internally managed Ember application that runs within FastBoot.
 
 As the clients issue requests to the FastBoot, this middleware is responsible for returning the middleware function for the most recently deployed Ember application. Additionally, clients can include a `&noFastboot` query parameter to passthru the fastboot middleware to the middleware that appears after this middleware for scenarios when you don't want to serve FastBoot HTML.
 
