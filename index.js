@@ -56,7 +56,11 @@ FastBootDeploy.prototype.fastbootServerMiddleware = function() {
 
 FastBootDeploy.prototype.deployMiddleware = function() {
   return function(req, res, next) {
-    if (req.protocol !== 'https') { return res.status(403).send('Deploy request must be issued using HTTPS').end(); }
+    // Don't allow unsecured request to this route. In the case where you are being forwarded from SSL terminated
+    // in heroku check the "x-forwarded-proto" header that the heroku router sets. Are there others like this?
+    if (req.protocol !== 'https' && req.headers['x-forwarded-proto'] !== 'https') {
+      return res.status(403).send('Deploy request must be issued using HTTPS').end();
+    }
     if (req.query.secret !== this.deploySecret) { return res.status(403).send('Deploy secret is is invalid').end(); }
 
     var self = this;
