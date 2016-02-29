@@ -108,7 +108,7 @@ module.exports = function(deployTarget) {
     's3-archive': {
       manifestPath: fastbootManifest,
       filePattern: '**/*.gz',
-      distDir: function(context) { return context.archiveDir; },
+      distDir: function(context) { return context.archivePath; },
       distFiles: function(context) { return [ context.archiveName ]; }
     },
     archive: { archiveName: function() { return fastbootArchiveName; } },
@@ -117,7 +117,7 @@ module.exports = function(deployTarget) {
       manifestPath: fastbootManifest,
       filePattern: '**/*.gz',
       distFiles: function(context) { return [ context.archiveName ]; },
-      distDir: function(context) { return context.archiveDir; }
+      distDir: function(context) { return context.archivePath; }
     },
     notifications: {
       services: {
