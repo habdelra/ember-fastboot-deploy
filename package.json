@@ -27,7 +27,6 @@
     "bluebird": "^3.3.1",
     "chalk": "^1.1.1",
     "ember-fastboot-server": "^0.5.0",
-    "express-force-ssl": "^0.3.0",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "request": "^2.69.0",

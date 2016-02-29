@@ -55,7 +55,8 @@ FastBootDeploy.prototype.fastbootServerMiddleware = function() {
 };
 
 FastBootDeploy.prototype.deployMiddleware = function() {
-  return [require('express-force-ssl'), function(req, res, next) {
+  return function(req, res, next) {
+    if (req.protocol !== 'https') { return res.status(403).send('Deploy request must be issued using HTTPS').end(); }
     if (req.query.secret !== this.deploySecret) { return res.status(403).send('Deploy secret is is invalid').end(); }
 
     var self = this;
@@ -92,7 +93,7 @@ FastBootDeploy.prototype.deployMiddleware = function() {
       self.log('red', error.stack);
       next(error);
     });
-  }.bind(this)];
+  }.bind(this);
 };
 
 FastBootDeploy.prototype.log = function(color, message) {
