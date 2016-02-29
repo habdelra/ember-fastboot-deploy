@@ -109,13 +109,6 @@ module.exports = function(deployTarget) {
       distFiles: function(context) { return [ context.archiveName ]; }
     },
     archive: { archiveName: function() { return fastbootArchiveName; } },
-    'manifest-main': { manifestPath: appManifest },
-    'manifest-archive': {
-      manifestPath: fastbootManifest,
-      filePattern: '**/*.gz',
-      distFiles: function(context) { return [ context.archiveName ]; },
-      distDir: function(context) { return context.archivePath; }
-    },
     notifications: {
       services: {
         fastbootServer: {
