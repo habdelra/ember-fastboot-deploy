@@ -18,6 +18,8 @@ function FastBootDeploy(options) {
 
   if (fs.existsSync(path.join(distPath, 'package.json'))) {
     this.fastbootServer = new FastBootServer({ distPath: distPath });
+  } else if (options.fastbootPkgName) {
+    this._deployPackage(options.fastbootPkgName);
   } else if (!fs.existsSync(distPath)) {
     mkdirp.sync(distPath);
   }
@@ -35,6 +37,38 @@ function requestGetFile(url, filePath) {
     request.get(url).pipe(output);
   });
 }
+
+FastBootDeploy.prototype._deployPackage = function(pkgName) {
+  var self = this;
+  self.log('green', 'Starting deploy for pkg ' + pkgName);
+
+  var pkgUrl = self.s3BucketUrl + '/' + pkgName;
+  var pkgDir = path.join('tmp', pkgName.replace(/\./g, '_'));
+  var pkgFile = path.join(pkgDir, pkgName);
+  if (!fs.existsSync(pkgDir)) { mkdirp.sync(pkgDir); } //TODO do a better job making sure this is clean first
+
+  self.log('green', 'Downloading fastboot package ' + pkgUrl);
+  return requestGetFile(pkgUrl, pkgFile).then(function(){
+    self.log('green', 'Unzipping fastboot package to ' + pkgDir);
+    return targz().extract(pkgFile, pkgDir);
+  }).then(function() {
+    return new Bluebird.Promise(function(resolve, reject) {
+      rimraf(self.distPath + '/*', function(error) {
+        if (error) { reject(error); } else { resolve(); }
+      });
+    });
+  }).then(function() {
+    self.log('green', 'Copying contents of ' + pkgDir + ' to ' + self.distPath);
+    return new Bluebird.Promise(function(resolve, reject) {
+      ncp(path.join(pkgDir, 'fastboot-dist'), self.distPath, function(error) {
+        if (error) { reject(error); } else { resolve(); }
+      });
+    });
+  }).then(function() {
+    self.log('green', 'Creating new fastboot middleware from dist folder: ' + self.distPath);
+    self.fastbootServer = new FastBootServer({ distPath: self.distPath });
+  });
+};
 
 FastBootDeploy.prototype.fastbootServerMiddleware = function() {
   return function(req, res, next) {
@@ -65,33 +99,8 @@ FastBootDeploy.prototype.deployMiddleware = function() {
 
     var self = this;
     var pkgName = req.query.pkgName;
-    self.log('green', 'Starting deploy for pkg ' + pkgName);
-
-    var pkgUrl = self.s3BucketUrl + '/' + pkgName;
-    var pkgDir = path.join('tmp', pkgName.replace(/\./g, '_'));
-    var pkgFile = path.join(pkgDir, pkgName);
-    if (!fs.existsSync(pkgDir)) { fs.mkdirSync(pkgDir); } //TODO do a better job making sure this is clean first
-
-    self.log('green', 'Downloading fastboot package ' + pkgUrl);
-    return requestGetFile(pkgUrl, pkgFile).then(function(){
-      self.log('green', 'Unzipping fastboot package to ' + pkgDir);
-      return targz().extract(pkgFile, pkgDir);
-    }).then(function() {
-      return new Bluebird.Promise(function(resolve, reject) {
-        rimraf(self.distPath + '/*', function(error) {
-          if (error) { reject(error); } else { resolve(); }
-        });
-      });
-    }).then(function() {
-      self.log('green', 'Copying contents of ' + pkgDir + ' to ' + self.distPath);
-      return new Bluebird.Promise(function(resolve, reject) {
-        ncp(path.join(pkgDir, 'fastboot-dist'), self.distPath, function(error) {
-          if (error) { reject(error); } else { resolve(); }
-        });
-      });
-    }).then(function() {
+    return self._deployPackage(pkgName).then(function() {
       self.log('green', 'Creating new fastboot middleware from dist folder: ' + self.distPath);
-      self.fastbootServer = new FastBootServer({ distPath: self.distPath });
       return res.status(200).send('Deployed package ' + pkgName + ' successfullfy.').end();
     }).catch(function(error) {
       self.log('red', error.stack);
