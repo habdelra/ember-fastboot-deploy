@@ -38,7 +38,8 @@ var FastBootDeploy = require('ember-fastboot-deploy');
 
 var fastbootDeploy = new FastBootDeploy({
   deploySecret: process.env.FASTBOOT_DEPLOY_SECRET,
-  s3BucketUrl: process.env.FASTBOOT_PKG_S3_BUCKET_URL
+  s3BucketUrl: process.env.FASTBOOT_PKG_S3_BUCKET_URL, 
+  fastbootPkgName: process.env.FASTBOOT_PKG_NAME // This is a package name that will be downloaded from S3 at startup if no ember application package is found on the local filesystem, e.g. fastboot-build.tar.gz
 });
 
 var app = express();
@@ -95,18 +96,14 @@ var VALID_DEPLOY_TARGETS = [ //update these to match what you call your deployme
 ];
 
 module.exports = function(deployTarget) {
-  var timestamp = (new Date()).getTime();
   var fastbootDeploySecret = process.env.FASTBOOT_DEPLOY_SECRET;
-  var fastbootArchiveName = 'fastboot-build-' + timestamp + '.tar.gz';
-  var appManifest = 'manifest.txt';
-  var fastbootManifest = 'manifest-archive.txt';
+  var fastbootArchiveName = 'fastboot-build.tar.gz';
   var ENV = {
-    plugins: ['fastboot-build', 'archive', 'gzip', 'manifest:manifest-main',
-      'manifest:manifest-archive', 's3:s3-main', 's3:s3-archive', 'notifications'],
+    plugins: ['fastboot-build', 'archive', 'gzip', 'manifest', 's3:s3-main', 's3:s3-archive', 'notifications'],
     'fastboot-build': {},
-    's3-main': { manifestPath: appManifest }, //manifest-archive clobbers this, need to specify it manually
+    's3-main': {},
     's3-archive': {
-      manifestPath: fastbootManifest,
+      manifestPath: null, // need to have the new fastboot pkg clobber the old one in s3
       filePattern: '**/*.gz',
       distDir: function(context) { return context.archivePath; },
       distFiles: function(context) { return [ context.archiveName ]; }
