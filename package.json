@@ -1,6 +1,6 @@
 {
   "name": "ember-fastboot-deploy",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Node Express middleware to deploy Ember applications into a FastBoot server",
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,7 @@
     "bluebird": "^3.3.1",
     "chalk": "^1.1.1",
     "debug": "^2.2.0",
-    "ember-fastboot-server": "^0.5.0",
+    "ember-fastboot-server": "^0.5.1",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "request": "^2.69.0",
