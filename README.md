@@ -41,8 +41,7 @@ var fastbootDeploy = new FastBootDeploy({
   s3BucketUrl: process.env.FASTBOOT_PKG_S3_BUCKET_URL,
   fastbootPkgName: process.env.FASTBOOT_PKG_NAME, // This is a package name that will be downloaded from S3 at startup if no ember application package is found on the local filesystem, e.g. fastboot-build.tar.gz
   afterDeploy: function() {
-    // Do something after the fastboot package has been deployed, like
-    purge the CDN cache
+    // Do something after the fastboot package has been deployed, like purge the CDN cache
   }
 });
 
