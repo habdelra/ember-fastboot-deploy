@@ -1,7 +1,7 @@
 # ember-fastboot-deploy
 Node Express middleware to deploy Ember applications into a FastBoot server
 
-To install this middleware run the following from your FastBoot node server: 
+To install this middleware run the following from your FastBoot node server:
 
 ```
 npm install ember-fastboot-deploy
@@ -15,7 +15,7 @@ This middleware is used to receive deployment notifications from the ember-cli-d
 4. Sends a notitication to the FastBoot server that a new zip is available to be deployed `ember-cli-deploy-notifications`
 
 Here's a video of the middleware in action: [https://vimeo.com/156916068](https://vimeo.com/156916068)
- 
+
 This middleware is responsible for receiving the notification from the last step above, downloading the zip file from S3, unzipping it on the FastBoot server's filesystem, and then restarting the internally managed Ember application that runs within FastBoot.
 
 As the clients issue requests to the FastBoot, this middleware is responsible for returning the middleware function for the most recently deployed Ember application. Additionally, clients can include a `&noFastboot` query parameter to passthru the fastboot middleware to the middleware that appears after this middleware for scenarios when you don't want to serve FastBoot HTML.
@@ -38,8 +38,12 @@ var FastBootDeploy = require('ember-fastboot-deploy');
 
 var fastbootDeploy = new FastBootDeploy({
   deploySecret: process.env.FASTBOOT_DEPLOY_SECRET,
-  s3BucketUrl: process.env.FASTBOOT_PKG_S3_BUCKET_URL, 
-  fastbootPkgName: process.env.FASTBOOT_PKG_NAME // This is a package name that will be downloaded from S3 at startup if no ember application package is found on the local filesystem, e.g. fastboot-build.tar.gz
+  s3BucketUrl: process.env.FASTBOOT_PKG_S3_BUCKET_URL,
+  fastbootPkgName: process.env.FASTBOOT_PKG_NAME, // This is a package name that will be downloaded from S3 at startup if no ember application package is found on the local filesystem, e.g. fastboot-build.tar.gz
+  afterDeploy: function() {
+    // Do something after the fastboot package has been deployed, like
+    purge the CDN cache
+  }
 });
 
 var app = express();
@@ -67,7 +71,7 @@ var listener = https.createServer(options, app).listen(process.env.PORT || 3000,
 ```
 (Note that this FastBoot Deploy middleware requires that the `/deploy` route run in HTTPS for security reasons--other routes do not have to run in HTTPS if you don't want them to).
 
-In order to use this middleware you will need to provide the following parameters to the FastBootDeploy function: 
+In order to use this middleware you will need to provide the following parameters to the FastBootDeploy function:
 
 1. `deploySecret` This is a secret value that the deployment notification request that is issued from the `ember-cli-deploy-notifications` pipeline build step must include. It is recommended you set this as an enviroment variable as it is a sentitive value.
 2. `s3BucketUrl` This is the URL from which you can access assets of the s3 bucket that contains your FastBoot build zip file. e.g. `https://s3.amazonaws.com/my-s3-bucket`
@@ -151,7 +155,7 @@ module.exports = function(deployTarget) {
 
   return ENV;
 }
-```  
+```
 
 (for your development environment it might be useful to use a self-signed cert, in that case you can add this you your deploy.js)
 ```js

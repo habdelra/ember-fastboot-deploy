@@ -15,6 +15,7 @@ function FastBootDeploy(options) {
   this.deploySecret = options.deploySecret;
   this.s3BucketUrl = options.s3BucketUrl;
   this.distPath = distPath;
+  this.afterDeploy = options.afterDeploy;
 
   if (fs.existsSync(path.join(distPath, 'package.json'))) {
     this.fastbootServer = new FastBootServer({ distPath: distPath });
@@ -67,6 +68,7 @@ FastBootDeploy.prototype._deployPackage = function(pkgName) {
   }).then(function() {
     self.log('green', 'Creating new fastboot middleware from dist folder: ' + self.distPath);
     self.fastbootServer = new FastBootServer({ distPath: self.distPath });
+    if (typeof self.afterDeploy === 'function') { self.afterDeploy(); }
   });
 };
 
