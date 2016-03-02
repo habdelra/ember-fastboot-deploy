@@ -28,14 +28,19 @@ function FastBootDeploy(options) {
 
 function requestGetFile(url, filePath) {
   return  new Bluebird.Promise(function(resolve, reject) {
-    var output = fs.createWriteStream(filePath);
-    output.on('finish', function (){
-      resolve();
-    });
-    output.on('error', function (error){
-      reject(error);
-    });
-    request.get(url).pipe(output);
+    request.get(url)
+    .on('response', function(response) {
+      if (response.statusCode !== 200) { reject(new Error('Could not download fastboot package, HTTP response was ' +
+                                                          response.statusCode + ' ' +
+                                                          response.statusMessage)); }
+    })
+      .on('error', function (error){
+        reject(error);
+      })
+      .pipe(fs.createWriteStream(filePath))
+      .on('finish', function() {
+        resolve();
+      });
   });
 }
 
@@ -50,6 +55,7 @@ FastBootDeploy.prototype._deployPackage = function(pkgName) {
 
   self.log('green', 'Downloading fastboot package ' + pkgUrl);
   return requestGetFile(pkgUrl, pkgFile).then(function(){
+    if (!fs.existsSync(pkgFile)) { throw new Error('no fastboot package in s3'); }
     self.log('green', 'Unzipping fastboot package to ' + pkgDir);
     return targz().extract(pkgFile, pkgDir);
   }).then(function() {
@@ -69,6 +75,8 @@ FastBootDeploy.prototype._deployPackage = function(pkgName) {
     self.log('green', 'Creating new fastboot middleware from dist folder: ' + self.distPath);
     self.fastbootServer = new FastBootServer({ distPath: self.distPath });
     if (typeof self.afterDeploy === 'function') { self.afterDeploy(); }
+  }).catch(function(error) {
+    self.log('red', error.message);
   });
 };
 
