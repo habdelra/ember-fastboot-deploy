@@ -166,3 +166,45 @@ module.exports = function(deployTarget) {
   //ignoring self signed certs for dev--REMOVE THIS!!
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 ```
+
+An example of the `ember-cli-build.js` looks like this. Make sure to set `generateAssetMap: true` in your fingerprint options.
+
+```js
+var EmberApp = require('ember-cli/lib/broccoli/ember-app');
+  var env = EmberApp.env() || 'dev';
+
+  var fingerprintOptions = {
+    enabled: true,  // in this example we are fingerprinting dev builds too--doesn't have to be that way...
+    generateAssetMap: true,
+    extensions: ['js', 'css', 'png', 'jpg', 'gif', 'png', 'ico']
+  };
+
+  switch (env) {
+    case 'dev':
+      fingerprintOptions.prepend = process.env.DEV_FINGERPRINT_PREFIX;
+    break;
+    case 'staging':
+      fingerprintOptions.prepend = process.env.STAGING_FINGERPRINT_PREFIX;
+    break;
+    case 'prod':
+      fingerprintOptions.prepend = process.env.PRODUCTION_FINGERPRINT_PREFIX;
+    break;
+  }
+
+
+module.exports = function(defaults) {
+  var app = new EmberApp(defaults, {
+    // Add options here
+    fingerprint: fingerprintOptions,
+    emberCLIDeploy: {
+      shouldActivate: true
+    },
+    emberCliFontAwesome: {
+      useScss: true
+    }
+  });
+
+  return app.toTree();
+};
+
+```
