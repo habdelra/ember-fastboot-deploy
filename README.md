@@ -80,6 +80,7 @@ In order to use this middleware you will need to provide the following parameter
 In order to leverage this middleware for deploying your Ember application to the FastBoot server, you need to setup your Ember application to perform all the deployment steps outlined at the top of this README. The following ember-cli-deploy addons should be installed for a setup where you want to host your application assets in S3 and use FastBoot to serve your index.html:
 
 * `ember-cli-deploy`
+* `ember-cli-deploy-build`
 * `ember-cli-deploy-archive` 
 * `ember-cli-deploy-display-revisions`
 * `ember-cli-deploy-fastboot-build`
@@ -102,8 +103,9 @@ module.exports = function(deployTarget) {
   var fastbootDeploySecret = process.env.FASTBOOT_DEPLOY_SECRET;
   var fastbootArchiveName = 'fastboot-build.tar.gz';
   var ENV = {
-    plugins: ['fastboot-build', 'archive', 'gzip', 'manifest', 's3:s3-main', 's3:s3-archive', 'notifications'],
-    'fastboot-build': {},
+    plugins: ['build', 'fastboot-build', 'gzip', 'manifest', 'archive', 's3:s3-main', 's3:s3-archive', 'notifications'],
+    build: { environment: deployTarget},
+    'fastboot-build': { environment: deployTarget},
     's3-main': {},
     's3-archive': {
       manifestPath: null, // need to have the new fastboot pkg clobber the old one in s3
@@ -111,7 +113,10 @@ module.exports = function(deployTarget) {
       distDir: function(context) { return context.archivePath; },
       distFiles: function(context) { return [ context.archiveName ]; }
     },
-    archive: { archiveName: function() { return fastbootArchiveName; } },
+    archive: {
+      archiveName: fastbootArchiveName,
+      distDir: function(context) { return context.fastbootDistDir; }
+    },
     notifications: {
       services: {
         fastbootServer: {
@@ -161,7 +166,3 @@ module.exports = function(deployTarget) {
   //ignoring self signed certs for dev--REMOVE THIS!!
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 ```
-
-
-
-
