@@ -44,7 +44,7 @@ function requestGetFile(url, filePath) {
   });
 }
 
-FastBootDeploy.prototype._deployPackage = function(pkgName) {
+FastBootDeploy.prototype._deployPackage = function(pkgName, isClientRequestedDeploy) {
   var self = this;
   self.log('green', 'Starting deploy for pkg ' + pkgName);
 
@@ -74,7 +74,7 @@ FastBootDeploy.prototype._deployPackage = function(pkgName) {
   }).then(function() {
     self.log('green', 'Creating new fastboot middleware from dist folder: ' + self.distPath);
     self.fastbootServer = new FastBootServer({ distPath: self.distPath });
-    if (typeof self.afterDeploy === 'function') { self.afterDeploy(); }
+    if (typeof self.afterDeploy === 'function') { self.afterDeploy(isClientRequestedDeploy); }
   }).catch(function(error) {
     self.log('red', error.message);
   });
@@ -109,7 +109,7 @@ FastBootDeploy.prototype.deployMiddleware = function() {
 
     var self = this;
     var pkgName = req.query.pkgName;
-    return self._deployPackage(pkgName).then(function() {
+    return self._deployPackage(pkgName, true).then(function() {
       self.log('green', 'Creating new fastboot middleware from dist folder: ' + self.distPath);
       return res.status(200).send('Deployed package ' + pkgName + ' successfullfy.').end();
     }).catch(function(error) {
