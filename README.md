@@ -9,7 +9,7 @@ npm install ember-fastboot-deploy
 
 This middleware is used to receive deployment notifications from the ember-cli-deploy pipeline. The idea is that in your Ember app, you can setup an ember-cli-deploy pipeline that:
 
-1. Performs a FastBoot build `ember-cli-fastboot-build`
+1. Performs a build with fastboot artifacts (requires `ember-cli-fastboot` ver 0.6.0+) `ember-cli-build`
 2. Zips up the FastBoot build artifacts `ember-cli-deploy-archive`
 3. Uploads the FastBoot zip to S3 `ember-cli-deploy-s3`
 4. Sends a notitication to the FastBoot server that a new zip is available to be deployed `ember-cli-deploy-notifications`
@@ -83,7 +83,6 @@ In order to leverage this middleware for deploying your Ember application to the
 * `ember-cli-deploy-build`
 * `ember-cli-deploy-archive` 
 * `ember-cli-deploy-display-revisions`
-* `ember-cli-deploy-fastboot-build`
 * `ember-cli-deploy-gzip`
 * `ember-cli-deploy-manifest`
 * `ember-cli-deploy-notifications`
@@ -103,9 +102,8 @@ module.exports = function(deployTarget) {
   var fastbootDeploySecret = process.env.FASTBOOT_DEPLOY_SECRET;
   var fastbootArchiveName = 'fastboot-build.tar.gz';
   var ENV = {
-    plugins: ['build', 'fastboot-build', 'gzip', 'manifest', 'archive', 's3:s3-main', 's3:s3-archive', 'notifications'],
+    plugins: ['build', 'archive', 'gzip', 'manifest', 's3:s3-main', 's3:s3-archive', 'notifications'],
     build: { environment: deployTarget},
-    'fastboot-build': { environment: deployTarget},
     's3-main': {},
     's3-archive': {
       manifestPath: null, // need to have the new fastboot pkg clobber the old one in s3
@@ -114,8 +112,7 @@ module.exports = function(deployTarget) {
       distFiles: function(context) { return [ context.archiveName ]; }
     },
     archive: {
-      archiveName: fastbootArchiveName,
-      distDir: function(context) { return context.fastbootDistDir; }
+      archiveName: fastbootArchiveName
     },
     notifications: {
       services: {
