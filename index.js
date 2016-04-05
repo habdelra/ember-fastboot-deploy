@@ -6,7 +6,7 @@ var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 var ncp = require('ncp');
 var path = require('path');
-var targz = require('tar.gz');
+var targz = require('targz');
 var debug = require('debug')('ember-fastboot-deploy');
 var FastBootServer = require('ember-fastboot-server');
 
@@ -57,7 +57,14 @@ FastBootDeploy.prototype._deployPackage = function(pkgName, isClientRequestedDep
   return requestGetFile(pkgUrl, pkgFile).then(function(){
     if (!fs.existsSync(pkgFile)) { throw new Error('no fastboot package in s3'); }
     self.log('green', 'Unzipping fastboot package to ' + pkgDir);
-    return targz().extract(pkgFile, pkgDir);
+    return new Bluebird.Promise(function(resolve, reject) {
+      targz.decompress({
+        src: pkgFile,
+        dest: pkgDir
+      }, function(error) {
+        if (error) { reject(error); } else { resolve(); }
+      });
+    });
   }).then(function() {
     return new Bluebird.Promise(function(resolve, reject) {
       rimraf(self.distPath + '/*', function(error) {
@@ -66,8 +73,9 @@ FastBootDeploy.prototype._deployPackage = function(pkgName, isClientRequestedDep
     });
   }).then(function() {
     self.log('green', 'Copying contents of ' + pkgDir + ' to ' + self.distPath);
+    mkdirp.sync(self.distPath);
     return new Bluebird.Promise(function(resolve, reject) {
-      ncp(path.join(pkgDir, 'fastboot-dist'), self.distPath, function(error) {
+      ncp(path.join(pkgDir, 'deploy-dist'), self.distPath, function(error) {
         if (error) { reject(error); } else { resolve(); }
       });
     });
@@ -76,7 +84,7 @@ FastBootDeploy.prototype._deployPackage = function(pkgName, isClientRequestedDep
     self.fastbootServer = new FastBootServer({ distPath: self.distPath });
     if (typeof self.afterDeploy === 'function') { self.afterDeploy(isClientRequestedDeploy); }
   }).catch(function(error) {
-    self.log('red', error.message);
+    self.log('red', error);
   });
 };
 
